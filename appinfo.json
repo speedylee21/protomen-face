@@ -1,0 +1,74 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "Cassandra Crawford",
+    "longName": "Protomen Watchface",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/protomen_light_80_100.png",
+                "name": "PROTOMEN_LIGHT_80_100",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/protomen_light_60_80.png",
+                "name": "PROTOMEN_LIGHT_60_80",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/protomen_light_40_60.png",
+                "name": "PROTOMEN_LIGHT_40_60",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/protomen_light_20_40.png",
+                "name": "PROTOMEN_LIGHT_20_40",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/protomen_light_10_20.png",
+                "name": "PROTOMEN_LIGHT_10_20",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/protomen_ablum_art.png",
+                "menuIcon": true,
+                "name": "PROTOMEN_ALBUM_ART",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "png"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Protomen",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
+    "uuid": "eda2456a-4252-441a-838e-9288031a72b5",
+    "versionLabel": "1.2",
+    "watchapp": {
+        "watchface": true
+    }
+}
