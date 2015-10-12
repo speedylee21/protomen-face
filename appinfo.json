@@ -9,6 +9,12 @@
     "resources": {
         "media": [
             {
+                "file": "images/protomen_album_cover_art_menu.png",
+                "menuIcon": true,
+                "name": "PROTOMEN_ALBUM_ART_MENU",
+                "type": "png"
+            },
+            {
                 "file": "images/protomen_light_80_100.png",
                 "name": "PROTOMEN_LIGHT_80_100",
                 "targetPlatforms": [
@@ -50,7 +56,6 @@
             },
             {
                 "file": "images/protomen_ablum_art.png",
-                "menuIcon": true,
                 "name": "PROTOMEN_ALBUM_ART",
                 "targetPlatforms": [
                     "aplite",
@@ -67,7 +72,7 @@
         "basalt"
     ],
     "uuid": "eda2456a-4252-441a-838e-9288031a72b5",
-    "versionLabel": "1.2",
+    "versionLabel": "1.4",
     "watchapp": {
         "watchface": true
     }

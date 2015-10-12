@@ -1,8 +1,9 @@
 #include <pebble.h>
 
 static Window *s_window;
-static Layer *s_date_layer, *s_image_layer, *s_time_layer, *s_battery_layer;
-static TextLayer *s_day_label, *s_num_label, *s_ampm_label, *s_digits_label;
+static Layer *s_date_layer, *s_time_layer, *s_battery_layer;
+static BitmapLayer *s_image_layer, *s_battery_light_layer;
+static TextLayer *s_day_label, *s_num_label, *s_ampm_label, *s_digits_label, *s_battery_level_label;
 static GBitmap *s_image;
 #ifdef PBL_COLOR
 static GBitmap *s_battery_image;
@@ -11,38 +12,37 @@ static uint8_t s_hour;
 static uint8_t s_minute;
 static uint8_t s_second;
 static uint16_t s_charge_percent;
-static char s_num_buffer[4], s_day_buffer[6], s_ampm_buffer[2];
-
-// Update the watchface display
-static void update_display(Layer *layer, GContext *ctx) {
-  GSize image_size = gbitmap_get_bounds(s_image).size;
-  graphics_draw_bitmap_in_rect(ctx, s_image, GRect(0, 0, image_size.w, image_size.h));
-}
+static char s_num_buffer[4], s_day_buffer[6], s_ampm_buffer[2], s_battery_level_buffer[12];
 
 static void update_battery(Layer *layer, GContext *ctx) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "update-battery %d", s_charge_percent);
   
   #ifdef PBL_COLOR
-  if (s_charge_percent <= 20) {
-    s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_10_20);
-  }
-  else if (s_charge_percent <= 40) {
-    s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_20_40);
-  }
-  else if (s_charge_percent <= 60) {
-    s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_40_60);
-  }
-  else if (s_charge_percent <= 80) {
-    s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_60_80);
-  }
-  else {
-    s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_80_100);
+    
+  if (s_charge_percent > 0) {
+    if (s_charge_percent <= 20) {
+      s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_10_20);
+    }
+    else if (s_charge_percent <= 40) {
+      s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_20_40);
+    }
+    else if (s_charge_percent <= 60) {
+      s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_40_60);
+    }
+    else if (s_charge_percent <= 80) {
+      s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_60_80);
+    }
+    else {
+      s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_LIGHT_80_100);
+    }
   }
   
-  GSize image_size = gbitmap_get_bounds(s_battery_image).size;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d %d", image_size.w, image_size.h);
-  graphics_draw_bitmap_in_rect(ctx, s_battery_image, GRect(0, 0, image_size.w, image_size.h));
+  bitmap_layer_set_bitmap(s_battery_light_layer, s_battery_image);
+  
   #endif
+    
+  //snprintf(s_battery_level_buffer, sizeof(s_battery_level_buffer), "%d%%", s_charge_percent);
+  //text_layer_set_text(s_battery_level_label, s_battery_level_buffer);
+  
 }
 
 
@@ -94,6 +94,7 @@ static void update_time(struct tm *tick_time) {
   
   layer_set_frame(text_layer_get_layer(s_ampm_label), GRect(text_layer_get_content_size(s_digits_label).w + 12, 14, 30, 24));
   
+  layer_mark_dirty(s_time_layer);
   layer_mark_dirty(s_date_layer);
 }
 
@@ -102,7 +103,6 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void handle_battery(BatteryChargeState charge_state) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "handle_battery %d ", charge_state.charge_percent);
   s_charge_percent = charge_state.charge_percent;
   layer_mark_dirty(s_battery_layer);
 }
@@ -111,16 +111,15 @@ static void window_load(Window *window) {
   
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
-
-  s_image_layer = layer_create(bounds);
-  layer_set_update_proc(s_image_layer, update_display);
-  layer_add_child(window_layer, s_image_layer);
   
   s_image = gbitmap_create_with_resource(RESOURCE_ID_PROTOMEN_ALBUM_ART);
+  s_image_layer = bitmap_layer_create(bounds);
+  bitmap_layer_set_bitmap(s_image_layer, s_image);
+  layer_add_child(window_layer, bitmap_layer_get_layer(s_image_layer));
   
   //Create time layer
   s_time_layer = layer_create(layer_get_bounds(window_get_root_layer(s_window)));
-  layer_add_child(s_image_layer, s_time_layer);
+  layer_add_child(bitmap_layer_get_layer(s_image_layer), s_time_layer);
   
   s_digits_label = text_layer_create(GRect(10, 5, 72, 32));
   text_layer_set_background_color(s_digits_label, GColorClear);
@@ -143,7 +142,7 @@ static void window_load(Window *window) {
   //Create date layer
   s_date_layer = layer_create(layer_get_bounds(window_get_root_layer(s_window)));
   layer_set_update_proc(s_date_layer, update_date);
-  layer_add_child(s_image_layer, s_date_layer);
+  layer_add_child(bitmap_layer_get_layer(s_image_layer), s_date_layer);
 
   s_day_label = text_layer_create(GRect(10, 35, 25, 20));
   text_layer_set_text(s_day_label, s_day_buffer);
@@ -162,16 +161,28 @@ static void window_load(Window *window) {
   layer_add_child(s_date_layer, text_layer_get_layer(s_num_label));
   
   //Create battery layer
-  s_battery_layer = layer_create(GRect(92, 58, 22, 26));
+  s_battery_layer = layer_create(bounds);
   layer_set_update_proc(s_battery_layer, update_battery);
-  layer_add_child(s_image_layer, s_battery_layer);
+  layer_add_child(bitmap_layer_get_layer(s_image_layer), s_battery_layer);
   
-  layer_mark_dirty(s_image_layer);
+  s_battery_light_layer = bitmap_layer_create(GRect(92, 58, 22, 26));
+  layer_add_child(s_battery_layer, bitmap_layer_get_layer(s_battery_light_layer));
+  
+  s_battery_level_label = text_layer_create(GRect(99, 8, 40, 18));
+  //text_layer_set_text(s_battery_level_label, "--%");
+  text_layer_set_background_color(s_battery_level_label, GColorClear);
+  text_layer_set_text_color(s_battery_level_label, GColorWhite);
+  text_layer_set_text_alignment(s_battery_level_label, GTextAlignmentRight);
+  text_layer_set_font(s_battery_level_label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+
+  layer_add_child(s_battery_layer, text_layer_get_layer(s_battery_level_label));
+  
   handle_battery(battery_state_service_peek());
+  layer_mark_dirty(bitmap_layer_get_layer(s_image_layer));
 }
 
 static void window_unload(Window *window) {
-  layer_destroy(s_image_layer);
+  bitmap_layer_destroy(s_image_layer);
   layer_destroy(s_time_layer);
   layer_destroy(s_date_layer);
   layer_destroy(s_battery_layer);
